@@ -1,19 +1,21 @@
 package com.example.bengaliaicallassistant;
 
 import android.app.Activity;
+import android.app.role.RoleManager;
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.view.Gravity;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
-    private LinearLayout conversationLayout;
+    private static final int ROLE_REQUEST_CODE = 1001;
+    private TextView statusText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,69 +23,38 @@ public class MainActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER);
+        root.setPadding(30, 40, 30, 40);
         root.setBackgroundColor(Color.rgb(5, 10, 20));
 
-        TextView header = new TextView(this);
-        header.setText("Bengali AI Call Assistant");
-        header.setTextColor(Color.WHITE);
-        header.setTextSize(22);
-        header.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        header.setGravity(Gravity.CENTER);
-        header.setPadding(20, 35, 20, 35);
+        TextView title = new TextView(this);
+        title.setText("Bengali AI Call Assistant");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(24);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
 
-        root.addView(header);
+        root.addView(title);
 
-        TextView status = new TextView(this);
-        status.setText("●  Assistant Ready");
-        status.setTextColor(Color.rgb(50, 220, 120));
-        status.setTextSize(16);
-        status.setPadding(25, 10, 25, 20);
-
-        root.addView(status);
-
-        ScrollView scrollView = new ScrollView(this);
-
-        conversationLayout = new LinearLayout(this);
-        conversationLayout.setOrientation(LinearLayout.VERTICAL);
-        conversationLayout.setPadding(20, 10, 20, 20);
-
-        TextView empty = new TextView(this);
-        empty.setText(
-                "এখনও কোনো কল নেই।\n\n" +
-                "Unknown call এলে এখানে লাইভ কথোপকথনের text দেখা যাবে।"
+        statusText = new TextView(this);
+        statusText.setText(
+                "Call Assistant প্রস্তুত\n\n" +
+                "Incoming call শনাক্ত করার জন্য Call Screening চালু করুন।"
         );
-        empty.setTextColor(Color.LTGRAY);
-        empty.setTextSize(16);
-        empty.setGravity(Gravity.CENTER);
-        empty.setPadding(20, 80, 20, 80);
+        statusText.setTextColor(Color.LTGRAY);
+        statusText.setTextSize(17);
+        statusText.setGravity(Gravity.CENTER);
+        statusText.setPadding(10, 50, 10, 30);
 
-        conversationLayout.addView(empty);
-        scrollView.addView(conversationLayout);
+        root.addView(statusText);
+
+        Button enableButton = new Button(this);
+        enableButton.setText("ENABLE CALL SCREENING");
+
+        enableButton.setOnClickListener(v -> requestCallScreeningRole());
 
         root.addView(
-                scrollView,
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        0,
-                        1
-                )
-        );
-
-        Button handoverButton = new Button(this);
-        handoverButton.setText("CALL HANDOVER");
-        handoverButton.setTextSize(16);
-        handoverButton.setTextColor(Color.WHITE);
-        handoverButton.setBackgroundColor(Color.rgb(25, 100, 220));
-
-        handoverButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                status.setText("●  Handover requested");
-            }
-        });
-
-        root.addView(
-                handoverButton,
+                enableButton,
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         65
@@ -91,5 +62,65 @@ public class MainActivity extends Activity {
         );
 
         setContentView(root);
+    }
+
+    private void requestCallScreeningRole() {
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+
+            RoleManager roleManager = getSystemService(RoleManager.class);
+
+            if (roleManager != null &&
+                    roleManager.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
+
+                if (!roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)) {
+
+                    Intent intent = roleManager.createRequestRoleIntent(
+                            RoleManager.ROLE_CALL_SCREENING
+                    );
+
+                    startActivityForResult(intent, ROLE_REQUEST_CODE);
+
+                } else {
+                    statusText.setText(
+                            "✓ Call Screening চালু আছে\n\n" +
+                            "এখন incoming call শনাক্ত করা যাবে।"
+                    );
+                }
+
+            } else {
+                statusText.setText(
+                        "এই ফোনে Call Screening role available নয়।"
+                );
+            }
+
+        } else {
+            statusText.setText(
+                    "এই feature-এর জন্য Android 10 বা তার পরের version প্রয়োজন।"
+            );
+        }
+    }
+
+    @Override
+    protected void onActivityResult(
+            int requestCode,
+            int resultCode,
+            Intent data) {
+
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == ROLE_REQUEST_CODE) {
+
+            if (resultCode == RESULT_OK) {
+                statusText.setText(
+                        "✓ Call Screening চালু হয়েছে\n\n" +
+                        "এখন incoming call শনাক্ত করার প্রস্তুতি সম্পূর্ণ।"
+                );
+            } else {
+                statusText.setText(
+                        "Call Screening চালু করা হয়নি।"
+                );
+            }
+        }
     }
 }
