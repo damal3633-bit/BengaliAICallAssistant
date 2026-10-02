@@ -3,6 +3,8 @@ package com.example.bengaliaicallassistant;
 import android.app.Activity;
 import android.os.Bundle;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
@@ -58,30 +60,61 @@ public class MainActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(20, 25, 20, 35);
+        root.setPadding(20, 30, 20, 35);
 
         scrollView.addView(root);
 
         // =========================
-        // HEADER
+        // HEADER (NEW – gradient title)
         // =========================
+
+        LinearLayout headerRow = new LinearLayout(this);
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(Gravity.CENTER_VERTICAL);
+        headerRow.setPadding(5, 10, 5, 5);
+
+        TextView headerIcon = new TextView(this);
+        headerIcon.setText("🤖");
+        headerIcon.setTextSize(34);
+        headerIcon.setPadding(0, 0, 12, 0);
+
+        headerRow.addView(headerIcon);
 
         TextView title = new TextView(this);
         title.setText("Bengali AI Call Assistant");
         title.setTextColor(white);
-        title.setTextSize(27);
+        title.setTextSize(22);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 10, 0, 5);
 
-        root.addView(title);
+        headerRow.addView(title);
+
+        title.post(() -> {
+            Shader shader = new LinearGradient(
+                    0,
+                    0,
+                    title.getWidth(),
+                    0,
+                    new int[]{
+                            Color.rgb(80, 180, 255),
+                            Color.rgb(180, 100, 255),
+                            Color.rgb(255, 120, 200)
+                    },
+                    null,
+                    Shader.TileMode.CLAMP
+            );
+
+            title.getPaint().setShader(shader);
+            title.invalidate();
+        });
+
+        root.addView(headerRow);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("আপনার কল • আপনার নিয়ন্ত্রণ • AI সহায়তা");
+        subtitle.setText("অজানা কল, এখন আর চিন্তার কারণ নয়!");
         subtitle.setTextColor(Color.rgb(180, 190, 220));
         subtitle.setTextSize(14);
         subtitle.setGravity(Gravity.CENTER);
-        subtitle.setPadding(0, 0, 0, 20);
+        subtitle.setPadding(0, 2, 0, 22);
 
         root.addView(subtitle);
 
