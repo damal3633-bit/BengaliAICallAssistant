@@ -11,7 +11,9 @@ public class IncomingCallScreeningService extends CallScreeningService {
 
     private static final String PREFS_NAME = "trusted_numbers";
     private static final String NUMBERS_KEY = "numbers";
+    private static final String BLOCKED_KEY = "blocked_numbers";
     private static final String TOTAL_CALLS_KEY = "total_calls";
+    private static final String BLOCKED_CALLS_KEY = "blocked_calls";
     private static final String HISTORY_KEY = "call_history";
     private static final int MAX_HISTORY = 100;
 
@@ -26,29 +28,21 @@ public class IncomingCallScreeningService extends CallScreeningService {
 
         phoneNumber = normalizeNumber(phoneNumber);
 
-        SharedPreferences preferences =
+        SharedPreferences prefs =
                 getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        // ===== TOTAL CALLS COUNTER =====
+        // Total calls counter
+        int totalCalls = prefs.getInt(TOTAL_CALLS_KEY, 0);
+        prefs.edit().putInt(TOTAL_CALLS_KEY, totalCalls + 1).apply();
 
-        int totalCalls = preferences.getInt(TOTAL_CALLS_KEY, 0);
-        preferences.edit()
-                .putInt(TOTAL_CALLS_KEY, totalCalls + 1)
-                .apply();
-
-        // ===== CALL HISTORY SAVE =====
-
+        // Call history save
         Set<String> history = new HashSet<>(
-                preferences.getStringSet(HISTORY_KEY, new HashSet<>())
-        );
-
+                prefs.getStringSet(HISTORY_KEY, new HashSet<>()));
         long now = System.currentTimeMillis();
-        String entry = phoneNumber + "|" + now;
-        history.add(entry);
-
-        // Keep only latest MAX_HISTORY entries
+        history.add(phoneNumber + "|" + now);
         if (history.size() > MAX_HISTORY) {
-            java.util.ArrayList<String> list = new java.util.ArrayList<>(history);
+            java.util.ArrayList<String> list =
+                    new java.util.ArrayList<>(history);
             java.util.Collections.sort(list, (a, b) -> {
                 try {
                     long ta = Long.parseLong(a.split("\\|")[1]);
@@ -58,32 +52,37 @@ public class IncomingCallScreeningService extends CallScreeningService {
                     return 0;
                 }
             });
-            java.util.ArrayList<String> trimmed =
-                    new java.util.ArrayList<>(list.subList(0, MAX_HISTORY));
-            history = new HashSet<>(trimmed);
+            history = new HashSet<>(list.subList(0, MAX_HISTORY));
+        }
+        prefs.edit().putStringSet(HISTORY_KEY, history).apply();
+
+        // Blocked check
+        Set<String> blockedNumbers =
+                prefs.getStringSet(BLOCKED_KEY, new HashSet<>());
+        boolean isBlocked = blockedNumbers.contains(phoneNumber);
+
+        CallResponse.Builder builder = new CallResponse.Builder();
+
+        if (isBlocked) {
+            int blockedCalls = prefs.getInt(BLOCKED_CALLS_KEY, 0);
+            prefs.edit()
+                    .putInt(BLOCKED_CALLS_KEY, blockedCalls + 1)
+                    .apply();
+
+            builder.setDisallowCall(true)
+                    .setRejectCall(true)
+                    .setSilenceCall(true)
+                    .setSkipNotification(true)
+                    .setSkipCallLog(false);
+        } else {
+            builder.setDisallowCall(false)
+                    .setRejectCall(false)
+                    .setSilenceCall(false)
+                    .setSkipNotification(false)
+                    .setSkipCallLog(false);
         }
 
-        preferences.edit()
-                .putStringSet(HISTORY_KEY, history)
-                .apply();
-
-        // ===== TRUSTED CHECK =====
-
-        Set<String> trustedNumbers =
-                preferences.getStringSet(NUMBERS_KEY, new HashSet<>());
-
-        boolean isTrusted = trustedNumbers.contains(phoneNumber);
-
-        CallResponse response =
-                new CallResponse.Builder()
-                        .setDisallowCall(false)
-                        .setRejectCall(false)
-                        .setSilenceCall(false)
-                        .setSkipNotification(false)
-                        .setSkipCallLog(false)
-                        .build();
-
-        respondToCall(callDetails, response);
+        respondToCall(callDetails, builder.build());
     }
 
     private String normalizeNumber(String number) {
