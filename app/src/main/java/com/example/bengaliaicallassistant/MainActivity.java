@@ -1,6 +1,7 @@
 package com.example.bengaliaicallassistant;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -296,7 +297,7 @@ public class MainActivity extends Activity {
         LinearLayout bn = new LinearLayout(this);
         bn.setOrientation(LinearLayout.HORIZONTAL);
         bn.setGravity(Gravity.CENTER_VERTICAL);
-        bn.setPadding(dp(10), dp(10), dp(10), dp(14));
+        bn.setPadding(dp(10), dp(10), dp(10), dp(10));
         GradientDrawable nb = new GradientDrawable();
         nb.setColor(Color.rgb(8, 10, 30));
         nb.setStroke(dp(2), PU);
@@ -321,18 +322,36 @@ public class MainActivity extends Activity {
         hm.addView(hL);
         bn.addView(hm, new LinearLayout.LayoutParams(0, -2, 1));
 
-        FrameLayout mw = new FrameLayout(this);
-        mw.setPadding(dp(6), 0, dp(6), 0);
+        LinearLayout mw = new LinearLayout(this);
+        mw.setOrientation(LinearLayout.VERTICAL);
+        mw.setGravity(Gravity.CENTER);
+        mw.setClickable(true);
+        mw.setFocusable(true);
+        mw.setOnClickListener(v -> startActivity(
+                new Intent(MainActivity.this, CallHistoryActivity.class)));
+
+        FrameLayout mf = new FrameLayout(this);
         View mg = new View(this);
         mg.setBackground(glow(
                 new int[]{Color.rgb(120, 60, 255), Color.rgb(200, 40, 200)},
                 Color.rgb(180, 80, 255), 40));
-        mw.addView(mg, new FrameLayout.LayoutParams(dp(68), dp(68), Gravity.CENTER));
+        mf.addView(mg, new FrameLayout.LayoutParams(dp(68), dp(68), Gravity.CENTER));
         TextView mI = new TextView(this);
         mI.setText("🎤");
         mI.setTextSize(26);
         mI.setGravity(Gravity.CENTER);
-        mw.addView(mI, new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
+        mf.addView(mI, new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
+        mw.addView(mf, new LinearLayout.LayoutParams(dp(72), dp(72)));
+
+        TextView mLabel = new TextView(this);
+        mLabel.setText("History");
+        mLabel.setTextSize(11);
+        mLabel.setTextColor(W);
+        mLabel.setGravity(Gravity.CENTER);
+        mLabel.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        LinearLayout.LayoutParams mlP = new LinearLayout.LayoutParams(-2, -2);
+        mlP.setMargins(0, dp(2), 0, 0);
+        mw.addView(mLabel, mlP);
         bn.addView(mw, new LinearLayout.LayoutParams(-2, -2));
 
         LinearLayout hw = new LinearLayout(this);
@@ -369,7 +388,8 @@ public class MainActivity extends Activity {
         Set<String> cur = new HashSet<>(
                 prefs.getStringSet(NKEY, new HashSet<>()));
         if (cur.contains(n)) {
-            Toast.makeText(this, "এই নম্বরটি আগে থেকেই Trusted", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "এই নম্বরটি আগে থেকেই Trusted",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
         cur.add(n);
@@ -434,7 +454,8 @@ public class MainActivity extends Activity {
                 Color.rgb(255, 60, 120), 18));
         db.setOnClickListener(v -> delNum(n));
 
-        LinearLayout.LayoutParams dp2 = new LinearLayout.LayoutParams(dp(52), dp(52));
+        LinearLayout.LayoutParams dp2 =
+                new LinearLayout.LayoutParams(dp(52), dp(52));
         dp2.setMargins(dp(6), 0, 0, 0);
         r.addView(db, dp2);
 
@@ -518,4 +539,4 @@ public class MainActivity extends Activity {
         return n.replace(" ", "").replace("-", "")
                 .replace("(", "").replace(")", "");
     }
-    }
+            }
