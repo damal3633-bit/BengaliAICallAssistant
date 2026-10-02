@@ -34,11 +34,14 @@ public class MainActivity extends Activity {
     TextView trustedCard;
     TextView trustedPill;
     TextView totalCard;
+    TextView blockedCard;
     SharedPreferences prefs;
 
     static final String PNAME = "trusted_numbers";
     static final String NKEY = "numbers";
     static final String TKEY = "total_calls";
+    static final String BKEY = "blocked_numbers";
+    static final String BCKEY = "blocked_calls";
 
     static final int W = Color.WHITE;
     static final int LT = Color.rgb(200, 210, 235);
@@ -52,19 +55,24 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences(PNAME, MODE_PRIVATE);
         setContentView(buildUI());
         refreshList();
-        refreshTotal();
+        refreshStats();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        refreshTotal();
+        refreshStats();
     }
 
-    void refreshTotal() {
-        if (totalCard == null) return;
-        int t = prefs.getInt(TKEY, 0);
-        totalCard.setText("📞\nTotal Calls\nScreened\n" + t);
+    void refreshStats() {
+        if (totalCard != null) {
+            int t = prefs.getInt(TKEY, 0);
+            totalCard.setText("📞\nTotal Calls\nScreened\n" + t);
+        }
+        if (blockedCard != null) {
+            Set<String> bl = prefs.getStringSet(BKEY, new HashSet<>());
+            blockedCard.setText("⛔\nBlocked\n(If Any)\n" + bl.size());
+        }
     }
 
     View buildUI() {
@@ -187,8 +195,13 @@ public class MainActivity extends Activity {
                 Color.rgb(30, 200, 130));
         trustedCard = statCard("🛡", "Trusted\nNumbers", "0",
                 Color.rgb(60, 150, 255));
-        TextView blk = statCard("⛔", "Blocked\n(If Any)", "0",
+        blockedCard = statCard("⛔", "Blocked\n(If Any)", "0",
                 Color.rgb(170, 90, 255));
+
+        blockedCard.setClickable(true);
+        blockedCard.setFocusable(true);
+        blockedCard.setOnClickListener(v -> startActivity(
+                new Intent(MainActivity.this, BlockedNumbersActivity.class)));
 
         LinearLayout.LayoutParams s1 = new LinearLayout.LayoutParams(0, -2, 1);
         s1.setMargins(0, 0, dp(6), 0);
@@ -198,7 +211,7 @@ public class MainActivity extends Activity {
         s3.setMargins(dp(6), 0, 0, 0);
         st.addView(totalCard, s1);
         st.addView(trustedCard, s2);
-        st.addView(blk, s3);
+        st.addView(blockedCard, s3);
         c.addView(st);
 
         LinearLayout tb = card(Color.rgb(12, 20, 60), BL);
@@ -357,13 +370,17 @@ public class MainActivity extends Activity {
         LinearLayout hw = new LinearLayout(this);
         hw.setOrientation(LinearLayout.VERTICAL);
         hw.setGravity(Gravity.CENTER);
+        hw.setClickable(true);
+        hw.setFocusable(true);
+        hw.setOnClickListener(v -> startActivity(
+                new Intent(MainActivity.this, BlockedNumbersActivity.class)));
+
         TextView hoI = new TextView(this);
-        hoI.setText("⇄");
-        hoI.setTextSize(24);
-        hoI.setTextColor(W);
+        hoI.setText("⛔");
+        hoI.setTextSize(22);
         hoI.setGravity(Gravity.CENTER);
         TextView hoL = new TextView(this);
-        hoL.setText("Handover");
+        hoL.setText("Blocked");
         hoL.setTextColor(DT);
         hoL.setTextSize(12);
         hoL.setGravity(Gravity.CENTER);
@@ -525,7 +542,7 @@ public class MainActivity extends Activity {
         t.setTextSize(13);
         t.setGravity(Gravity.CENTER);
         t.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        t.setPadding(dp(6), dp(14), dp(6), dp(14));
+               t.setPadding(dp(6), dp(14), dp(6), dp(14));
         t.setLineSpacing(dp(2), 1f);
         GradientDrawable b = new GradientDrawable();
         b.setColor(Color.rgb(10, 16, 48));
@@ -539,4 +556,4 @@ public class MainActivity extends Activity {
         return n.replace(" ", "").replace("-", "")
                 .replace("(", "").replace(")", "");
     }
-            }
+}
