@@ -1,6 +1,8 @@
 package com.example.bengaliaicallassistant;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -10,7 +12,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -65,7 +66,7 @@ public class MainActivity extends Activity {
         scrollView.addView(root);
 
         // =========================
-        // HEADER (NEW – gradient title)
+        // HEADER
         // =========================
 
         LinearLayout headerRow = new LinearLayout(this);
@@ -271,30 +272,32 @@ public class MainActivity extends Activity {
                 )
         );
 
-        Button addButton = new Button(this);
-        addButton.setText("＋  ADD TRUSTED NUMBER");
+        // ===== ADD BUTTON (glow + text visible) =====
+
+        TextView addButton = new TextView(this);
+        addButton.setText("＋   ADD TRUSTED NUMBER");
         addButton.setTextColor(white);
         addButton.setTextSize(15);
-        addButton.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
+        addButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        addButton.setGravity(Gravity.CENTER);
 
-        GradientDrawable addBg = new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
+        Drawable addBg = makeGlowBg(
                 new int[]{
                         Color.rgb(0, 130, 255),
                         Color.rgb(190, 40, 255)
-                }
+                },
+                Color.rgb(140, 80, 255),
+                30
         );
 
-        addBg.setCornerRadius(30);
         addButton.setBackground(addBg);
+        addButton.setClickable(true);
+        addButton.setFocusable(true);
 
         LinearLayout.LayoutParams addParams =
                 new LinearLayout.LayoutParams(
                         -1,
-                        58
+                        78
                 );
 
         addParams.setMargins(0, 15, 0, 5);
@@ -364,6 +367,66 @@ public class MainActivity extends Activity {
         );
 
         setContentView(scrollView);
+    }
+
+    // =========================
+    // GLOW BACKGROUND HELPER
+    // =========================
+
+    private Drawable makeGlowBg(
+            int[] gradientColors,
+            int glowColor,
+            float radiusDp
+    ) {
+
+        float density =
+                getResources().getDisplayMetrics().density;
+
+        float radius = radiusDp * density;
+
+        int[] glowAlphas = { 25, 55, 100 };
+
+        Drawable[] layers = new Drawable[4];
+
+        for (int i = 0; i < 3; i++) {
+
+            GradientDrawable g = new GradientDrawable();
+            g.setShape(GradientDrawable.RECTANGLE);
+            g.setCornerRadius(radius);
+            g.setColor(withAlpha(glowColor, glowAlphas[i]));
+            layers[i] = g;
+        }
+
+        GradientDrawable main = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                gradientColors
+        );
+
+        main.setShape(GradientDrawable.RECTANGLE);
+        main.setCornerRadius(radius);
+
+        layers[3] = main;
+
+        LayerDrawable ld = new LayerDrawable(layers);
+
+        int step = dpToPx(2);
+
+        ld.setLayerInset(1, step, step, step, step);
+        ld.setLayerInset(2, step * 2, step * 2, step * 2, step * 2);
+        ld.setLayerInset(3, step * 3, step * 3, step * 3, step * 3);
+
+        return ld;
+    }
+
+    private int withAlpha(int color, int alpha) {
+        return (color & 0x00FFFFFF) | (alpha << 24);
+    }
+
+    private int dpToPx(int dp) {
+        return (int)(
+                dp *
+                getResources().getDisplayMetrics().density
+        );
     }
 
     // =========================
@@ -633,34 +696,43 @@ public class MainActivity extends Activity {
                 textParams
         );
 
-        Button deleteButton =
-                new Button(this);
+        // ===== DELETE BUTTON (glow + text visible) =====
 
+        TextView deleteButton = new TextView(this);
         deleteButton.setText("DELETE");
-        deleteButton.setTextSize(11);
+        deleteButton.setTextSize(12);
         deleteButton.setTextColor(white);
+        deleteButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        deleteButton.setGravity(Gravity.CENTER);
+        deleteButton.setClickable(true);
+        deleteButton.setFocusable(true);
 
-        GradientDrawable deleteBg =
-                new GradientDrawable();
-
-        deleteBg.setColor(
-                Color.rgb(210, 35, 100)
+        Drawable delBg = makeGlowBg(
+                new int[]{
+                        Color.rgb(235, 45, 110),
+                        Color.rgb(160, 20, 90)
+                },
+                Color.rgb(255, 60, 120),
+                22
         );
 
-        deleteBg.setCornerRadius(25);
-
-        deleteButton.setBackground(deleteBg);
+        deleteButton.setBackground(delBg);
 
         deleteButton.setOnClickListener(
                 v -> deleteTrustedNumber(number)
         );
 
+        LinearLayout.LayoutParams delParams =
+                new LinearLayout.LayoutParams(
+                        dpToPx(95),
+                        dpToPx(60)
+                );
+
+        delParams.setMargins(dpToPx(6), 0, 0, 0);
+
         row.addView(
                 deleteButton,
-                new LinearLayout.LayoutParams(
-                        105,
-                        50
-                )
+                delParams
         );
 
         LinearLayout.LayoutParams rowParams =
@@ -695,39 +767,4 @@ public class MainActivity extends Activity {
                         preferences.getStringSet(
                                 NUMBERS_KEY,
                                 new HashSet<>()
-                        )
-                );
-
-        currentNumbers.remove(number);
-
-        preferences.edit()
-                .putStringSet(
-                        NUMBERS_KEY,
-                        currentNumbers
-                )
-                .apply();
-
-        refreshTrustedList();
-
-        Toast.makeText(
-                this,
-                "Trusted number deleted",
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    // =========================
-    // NORMALIZE
-    // =========================
-
-    private String normalizeNumber(
-            String number
-    ) {
-
-        return number
-                .replace(" ", "")
-                .replace("-", "")
-                .replace("(", "")
-                .replace(")", "");
-    }
-}
+   
