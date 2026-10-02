@@ -41,7 +41,6 @@ public class MainActivity extends Activity {
     static final String NKEY = "numbers";
     static final String TKEY = "total_calls";
     static final String BKEY = "blocked_numbers";
-    static final String BCKEY = "blocked_calls";
 
     static final int W = Color.WHITE;
     static final int LT = Color.rgb(200, 210, 235);
@@ -213,6 +212,44 @@ public class MainActivity extends Activity {
         st.addView(trustedCard, s2);
         st.addView(blockedCard, s3);
         c.addView(st);
+
+        LinearLayout lcCard = card(Color.rgb(15, 20, 60), PU);
+        c.addView(lcCard);
+
+        TextView lcTitle = new TextView(this);
+        lcTitle.setText("🎙   Live Conversation");
+        lcTitle.setTextColor(W);
+        lcTitle.setTextSize(18);
+        lcTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        lcCard.addView(lcTitle);
+
+        TextView lcMsg = new TextView(this);
+        lcMsg.setText("AI backend connect না হওয়া পর্যন্ত\n" +
+                "এখানে বাস্তব কথোপকথন দেখা যাবে না।");
+        lcMsg.setTextColor(DT);
+        lcMsg.setTextSize(13);
+        lcMsg.setGravity(Gravity.CENTER);
+        lcMsg.setPadding(0, dp(10), 0, dp(14));
+        lcCard.addView(lcMsg);
+
+        TextView hoBtn = new TextView(this);
+        hoBtn.setText("⇄   HANDOVER TO ME");
+        hoBtn.setTextColor(W);
+        hoBtn.setTextSize(14);
+        hoBtn.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        hoBtn.setGravity(Gravity.CENTER);
+        hoBtn.setClickable(true);
+        hoBtn.setFocusable(true);
+        hoBtn.setBackground(glow(
+                new int[]{Color.rgb(120, 60, 255), Color.rgb(200, 40, 200)},
+                PU, 28));
+        LinearLayout.LayoutParams hoP = new LinearLayout.LayoutParams(-1, dp(64));
+        hoP.setMargins(0, dp(6), 0, dp(4));
+        lcCard.addView(hoBtn, hoP);
+        hoBtn.setOnClickListener(v -> Toast.makeText(
+                this,
+                "Handover: backend integration needed",
+                Toast.LENGTH_LONG).show());
 
         LinearLayout tb = card(Color.rgb(12, 20, 60), BL);
         c.addView(tb);
@@ -502,7 +539,7 @@ public class MainActivity extends Activity {
             ls[i] = g;
         }
         GradientDrawable m = new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT, colors);
+                            GradientDrawable.Orientation.LEFT_RIGHT, colors);
         m.setShape(GradientDrawable.RECTANGLE);
         m.setCornerRadius(r);
         ls[3] = m;
@@ -542,7 +579,7 @@ public class MainActivity extends Activity {
         t.setTextSize(13);
         t.setGravity(Gravity.CENTER);
         t.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-               t.setPadding(dp(6), dp(14), dp(6), dp(14));
+        t.setPadding(dp(6), dp(14), dp(6), dp(14));
         t.setLineSpacing(dp(2), 1f);
         GradientDrawable b = new GradientDrawable();
         b.setColor(Color.rgb(10, 16, 48));
@@ -557,3 +594,4 @@ public class MainActivity extends Activity {
                 .replace("(", "").replace(")", "");
     }
 }
+            
