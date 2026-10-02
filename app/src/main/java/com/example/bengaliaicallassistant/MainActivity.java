@@ -12,7 +12,9 @@ import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -29,6 +31,7 @@ public class MainActivity extends Activity {
     private LinearLayout trustedListContainer;
     private TextView trustedCountText;
     private TextView trustedStatCard;
+    private TextView trustedPill;
 
     private android.content.SharedPreferences preferences;
 
@@ -36,10 +39,12 @@ public class MainActivity extends Activity {
     private static final String NUMBERS_KEY = "numbers";
 
     private int white = Color.WHITE;
-    private int lightText = Color.rgb(210, 215, 235);
-    private int blue = Color.rgb(40, 150, 255);
-    private int purple = Color.rgb(180, 60, 255);
+    private int lightText = Color.rgb(200, 210, 235);
+    private int dimText = Color.rgb(140, 155, 195);
+    private int blue = Color.rgb(60, 170, 255);
+    private int purple = Color.rgb(180, 80, 255);
     private int green = Color.rgb(40, 230, 150);
+    private int darkBg = Color.rgb(3, 5, 22);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,14 +61,29 @@ public class MainActivity extends Activity {
 
     private void createUI() {
 
-        ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(Color.rgb(3, 5, 20));
-
+        // ===== ROOT: vertical (scroll + bottom nav) =====
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(20, 30, 20, 35);
+        root.setBackgroundColor(darkBg);
 
-        scrollView.addView(root);
+        // ===== SCROLL AREA =====
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setFillViewport(true);
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(20), dp(30), dp(20), dp(30));
+
+        scrollView.addView(content);
+
+        root.addView(
+                scrollView,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        0,
+                        1
+                )
+        );
 
         // =========================
         // HEADER
@@ -72,29 +92,40 @@ public class MainActivity extends Activity {
         LinearLayout headerRow = new LinearLayout(this);
         headerRow.setOrientation(LinearLayout.HORIZONTAL);
         headerRow.setGravity(Gravity.CENTER_VERTICAL);
-        headerRow.setPadding(5, 10, 5, 5);
+        headerRow.setPadding(dp(4), 0, dp(4), 0);
 
         TextView headerIcon = new TextView(this);
         headerIcon.setText("🤖");
-        headerIcon.setTextSize(34);
-        headerIcon.setPadding(0, 0, 12, 0);
+        headerIcon.setTextSize(30);
 
-        headerRow.addView(headerIcon);
+        LinearLayout.LayoutParams hiParams =
+                new LinearLayout.LayoutParams(-2, -2);
+        hiParams.setMargins(0, 0, dp(12), 0);
+        headerRow.addView(headerIcon, hiParams);
 
         TextView title = new TextView(this);
         title.setText("Bengali AI Call Assistant");
         title.setTextColor(white);
-        title.setTextSize(22);
+        title.setTextSize(20);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
 
-        headerRow.addView(title);
+        LinearLayout.LayoutParams titleParams =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        headerRow.addView(title, titleParams);
+
+        // gear icon placeholder
+        TextView gear = new TextView(this);
+        gear.setText("⚙");
+        gear.setTextSize(24);
+        gear.setTextColor(Color.rgb(120, 150, 220));
+
+        headerRow.addView(gear);
+
+        content.addView(headerRow);
 
         title.post(() -> {
             Shader shader = new LinearGradient(
-                    0,
-                    0,
-                    title.getWidth(),
-                    0,
+                    0, 0, title.getWidth(), 0,
                     new int[]{
                             Color.rgb(80, 180, 255),
                             Color.rgb(180, 100, 255),
@@ -103,183 +134,257 @@ public class MainActivity extends Activity {
                     null,
                     Shader.TileMode.CLAMP
             );
-
             title.getPaint().setShader(shader);
             title.invalidate();
         });
 
-        root.addView(headerRow);
-
         TextView subtitle = new TextView(this);
         subtitle.setText("অজানা কল, এখন আর চিন্তার কারণ নয়!");
-        subtitle.setTextColor(Color.rgb(180, 190, 220));
-        subtitle.setTextSize(14);
+        subtitle.setTextColor(dimText);
+        subtitle.setTextSize(13);
         subtitle.setGravity(Gravity.CENTER);
-        subtitle.setPadding(0, 2, 0, 22);
+        subtitle.setPadding(0, dp(6), 0, dp(22));
 
-        root.addView(subtitle);
+        content.addView(subtitle);
 
         // =========================
-        // AI MAIN CARD
+        // HERO AI CARD
         // =========================
 
-        LinearLayout aiCard = createCard(
-                Color.rgb(12, 20, 65),
-                purple,
-                blue
+        LinearLayout heroCard = createCard(
+                Color.rgb(15, 22, 70),
+                purple
         );
 
-        TextView aiIcon = new TextView(this);
-        aiIcon.setText("🤖");
-        aiIcon.setTextSize(55);
-        aiIcon.setGravity(Gravity.CENTER);
+        // robot in glow ring
+        FrameLayout robotWrap = new FrameLayout(this);
 
-        aiCard.addView(aiIcon);
-
-        TextView aiTitle = new TextView(this);
-        aiTitle.setText("AI Call Assistant");
-        aiTitle.setTextColor(white);
-        aiTitle.setTextSize(24);
-        aiTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        aiTitle.setGravity(Gravity.CENTER);
-
-        aiCard.addView(aiTitle);
-
-        TextView status = new TextView(this);
-        status.setText("●  CALL SCREENING ON");
-        status.setTextColor(green);
-        status.setTextSize(16);
-        status.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        status.setGravity(Gravity.CENTER);
-        status.setPadding(0, 12, 0, 10);
-
-        aiCard.addView(status);
-
-        TextView aiInfo = new TextView(this);
-        aiInfo.setText(
-                "অপরিচিত কল শনাক্ত করে\n" +
-                "AI handling system-এর জন্য প্রস্তুত করা হবে।"
+        View robotGlow = new View(this);
+        Drawable gd = makeGlowBg(
+                new int[]{
+                        Color.rgb(70, 130, 255),
+                        Color.rgb(180, 80, 255)
+                },
+                Color.rgb(140, 100, 255),
+                60
         );
-        aiInfo.setTextColor(lightText);
-        aiInfo.setTextSize(15);
-        aiInfo.setGravity(Gravity.CENTER);
-        aiInfo.setPadding(0, 5, 0, 10);
+        robotGlow.setBackground(gd);
 
-        aiCard.addView(aiInfo);
+        FrameLayout.LayoutParams glowParams =
+                new FrameLayout.LayoutParams(
+                        dp(120), dp(120),
+                        Gravity.CENTER
+                );
+        robotWrap.addView(robotGlow, glowParams);
 
-        root.addView(aiCard);
+        TextView robotEmoji = new TextView(this);
+        robotEmoji.setText("🤖");
+        robotEmoji.setTextSize(58);
+        robotEmoji.setGravity(Gravity.CENTER);
+
+        FrameLayout.LayoutParams emojiParams =
+                new FrameLayout.LayoutParams(
+                        -2, -2,
+                        Gravity.CENTER
+                );
+        robotWrap.addView(robotEmoji, emojiParams);
+
+        content.addView(heroCard);
+
+        LinearLayout.LayoutParams rwParams =
+                new LinearLayout.LayoutParams(-2, -2);
+        rwParams.gravity = Gravity.CENTER_HORIZONTAL;
+        rwParams.setMargins(0, 0, 0, dp(8));
+        heroCard.addView(robotWrap, rwParams);
+
+        TextView heroTitle = new TextView(this);
+        heroTitle.setText("AI Call Assistant");
+        heroTitle.setTextColor(white);
+        heroTitle.setTextSize(23);
+        heroTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        heroTitle.setGravity(Gravity.CENTER);
+
+        heroCard.addView(heroTitle);
+
+        // status pill
+        TextView statusPill = new TextView(this);
+        statusPill.setText("✓   Call Screening ON");
+        statusPill.setTextColor(white);
+        statusPill.setTextSize(14);
+        statusPill.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        statusPill.setGravity(Gravity.CENTER);
+
+        Drawable pillBg = makeGlowBg(
+                new int[]{
+                        Color.rgb(20, 190, 110),
+                        Color.rgb(20, 150, 190)
+                },
+                Color.rgb(40, 230, 150),
+                24
+        );
+        statusPill.setBackground(pillBg);
+        statusPill.setPadding(
+                dp(18), dp(9),
+                dp(18), dp(9)
+        );
+
+        LinearLayout.LayoutParams pillParams =
+                new LinearLayout.LayoutParams(-2, -2);
+        pillParams.gravity = Gravity.CENTER_HORIZONTAL;
+        pillParams.setMargins(0, dp(12), 0, dp(12));
+
+        heroCard.addView(statusPill, pillParams);
+
+        TextView heroInfo = new TextView(this);
+        heroInfo.setText(
+                "অজানা নম্বর থেকে আসা কলগুলো\n" +
+                "আমি স্ক্রিন করে আপনার জন্য\n" +
+                "সঠিক তথ্য জানাবো।"
+        );
+        heroInfo.setTextColor(lightText);
+        heroInfo.setTextSize(14);
+        heroInfo.setGravity(Gravity.CENTER);
+        heroInfo.setPadding(0, dp(4), 0, dp(4));
+
+        heroCard.addView(heroInfo);
 
         // =========================
-        // STATISTICS
+        // STATS ROW (3 cards)
         // =========================
 
         LinearLayout stats = new LinearLayout(this);
         stats.setOrientation(LinearLayout.HORIZONTAL);
         stats.setGravity(Gravity.CENTER);
-        stats.setPadding(0, 18, 0, 18);
+        stats.setPadding(0, dp(18), 0, dp(18));
 
         TextView totalCard = createStatCard(
                 "📞",
-                "Total Calls",
-                "0"
+                "Total Calls\nScreened",
+                "0",
+                Color.rgb(30, 200, 130)
         );
 
         trustedStatCard = createStatCard(
                 "🛡",
-                "Trusted",
-                "0"
+                "Trusted\nNumbers",
+                "0",
+                Color.rgb(60, 150, 255)
         );
 
-        stats.addView(
-                totalCard,
-                new LinearLayout.LayoutParams(
-                        0,
-                        130,
-                        1
-                )
+        TextView blockedCard = createStatCard(
+                "⛔",
+                "Blocked\n(If Any)",
+                "0",
+                Color.rgb(170, 90, 255)
         );
 
-        stats.addView(
-                trustedStatCard,
-                new LinearLayout.LayoutParams(
-                        0,
-                        130,
-                        1
-                )
-        );
+        LinearLayout.LayoutParams statLp1 =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        statLp1.setMargins(0, 0, dp(6), 0);
 
-        root.addView(stats);
+        LinearLayout.LayoutParams statLp2 =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        statLp2.setMargins(dp(3), 0, dp(3), 0);
+
+        LinearLayout.LayoutParams statLp3 =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        statLp3.setMargins(dp(6), 0, 0, 0);
+
+        stats.addView(totalCard, statLp1);
+        stats.addView(trustedStatCard, statLp2);
+        stats.addView(blockedCard, statLp3);
+
+        content.addView(stats);
 
         // =========================
-        // TRUSTED NUMBER CARD
+        // TRUSTED NUMBERS CARD
         // =========================
 
-        LinearLayout trustedCardBox = createCard(
-                Color.rgb(10, 18, 55),
-                blue,
-                purple
+        LinearLayout trustedBox = createCard(
+                Color.rgb(12, 20, 60),
+                blue
         );
 
-        TextView trustedTitle = new TextView(this);
-        trustedTitle.setText("👥  Trusted Numbers");
-        trustedTitle.setTextColor(white);
-        trustedTitle.setTextSize(22);
-        trustedTitle.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
+        LinearLayout tHead = new LinearLayout(this);
+        tHead.setOrientation(LinearLayout.HORIZONTAL);
+        tHead.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView tTitle = new TextView(this);
+        tTitle.setText("👥   Trusted Numbers");
+        tTitle.setTextColor(white);
+        tTitle.setTextSize(19);
+        tTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+
+        LinearLayout.LayoutParams tTitleLp =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        tHead.addView(tTitle, tTitleLp);
+
+        trustedPill = new TextView(this);
+        trustedPill.setText("0 Trusted");
+        trustedPill.setTextColor(white);
+        trustedPill.setTextSize(12);
+        trustedPill.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        trustedPill.setGravity(Gravity.CENTER);
+
+        Drawable tpBg = makeGlowBg(
+                new int[]{
+                        Color.rgb(20, 190, 110),
+                        Color.rgb(20, 150, 190)
+                },
+                Color.rgb(40, 230, 150),
+                20
+        );
+        trustedPill.setBackground(tpBg);
+        trustedPill.setPadding(
+                dp(14), dp(6),
+                dp(14), dp(6)
         );
 
-        trustedCardBox.addView(trustedTitle);
+        tHead.addView(trustedPill);
 
-        TextView trustedInfo = new TextView(this);
-        trustedInfo.setText(
-                "যে নম্বরগুলো Trusted করা হবে,\n" +
-                "সেগুলো AI screening-এর জন্য আলাদা করা হবে না।"
-        );
-        trustedInfo.setTextColor(lightText);
-        trustedInfo.setTextSize(14);
-        trustedInfo.setPadding(0, 8, 0, 15);
+        trustedBox.addView(tHead);
 
-        trustedCardBox.addView(trustedInfo);
+        TextView tInfo = new TextView(this);
+        tInfo.setText("বিশ্বস্ত নম্বরগুলো এখানে দিন");
+        tInfo.setTextColor(dimText);
+        tInfo.setTextSize(13);
+        tInfo.setPadding(0, dp(6), 0, dp(14));
+
+        trustedBox.addView(tInfo);
 
         trustedNumberInput = new EditText(this);
         trustedNumberInput.setHint("+919876543210");
         trustedNumberInput.setHintTextColor(Color.GRAY);
         trustedNumberInput.setTextColor(white);
-        trustedNumberInput.setTextSize(16);
+        trustedNumberInput.setTextSize(15);
         trustedNumberInput.setInputType(
                 InputType.TYPE_CLASS_PHONE
         );
 
         GradientDrawable inputBg = new GradientDrawable();
-        inputBg.setColor(Color.rgb(8, 12, 35));
-        inputBg.setCornerRadius(25);
-        inputBg.setStroke(2, blue);
+        inputBg.setColor(Color.rgb(8, 12, 38));
+        inputBg.setCornerRadius(dp(22));
+        inputBg.setStroke(dp(2), blue);
 
         trustedNumberInput.setBackground(inputBg);
         trustedNumberInput.setPadding(
-                20,
-                10,
-                20,
-                10
+                dp(18), dp(10),
+                dp(18), dp(10)
         );
 
-        trustedCardBox.addView(
-                trustedNumberInput,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        60
-                )
-        );
+        LinearLayout.LayoutParams inLp =
+                new LinearLayout.LayoutParams(-1, dp(56));
+        trustedBox.addView(trustedNumberInput, inLp);
 
-        // ===== ADD BUTTON (glow + text visible) =====
-
+        // ADD button
         TextView addButton = new TextView(this);
         addButton.setText("＋   ADD TRUSTED NUMBER");
         addButton.setTextColor(white);
-        addButton.setTextSize(15);
+        addButton.setTextSize(14);
         addButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         addButton.setGravity(Gravity.CENTER);
+        addButton.setClickable(true);
+        addButton.setFocusable(true);
 
         Drawable addBg = makeGlowBg(
                 new int[]{
@@ -287,90 +392,190 @@ public class MainActivity extends Activity {
                         Color.rgb(190, 40, 255)
                 },
                 Color.rgb(140, 80, 255),
-                30
+                28
         );
-
         addButton.setBackground(addBg);
-        addButton.setClickable(true);
-        addButton.setFocusable(true);
 
-        LinearLayout.LayoutParams addParams =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        78
-                );
+        LinearLayout.LayoutParams addLp =
+                new LinearLayout.LayoutParams(-1, dp(72));
+        addLp.setMargins(0, dp(14), 0, dp(4));
 
-        addParams.setMargins(0, 15, 0, 5);
+        trustedBox.addView(addButton, addLp);
 
-        trustedCardBox.addView(
-                addButton,
-                addParams
+        addButton.setOnClickListener(
+                v -> addTrustedNumber()
         );
 
-        root.addView(trustedCardBox);
+        content.addView(trustedBox);
 
         // =========================
-        // SAVED NUMBERS
+        // SAVED NUMBERS HEADER
         // =========================
+
+        LinearLayout savedHead = new LinearLayout(this);
+        savedHead.setOrientation(LinearLayout.HORIZONTAL);
+        savedHead.setGravity(Gravity.CENTER_VERTICAL);
+        savedHead.setPadding(dp(6), dp(22), dp(6), dp(10));
 
         TextView savedTitle = new TextView(this);
-        savedTitle.setText("⭐  Saved Trusted Numbers");
+        savedTitle.setText("⭐   Saved Trusted Numbers");
         savedTitle.setTextColor(white);
-        savedTitle.setTextSize(21);
-        savedTitle.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-        savedTitle.setPadding(5, 25, 5, 12);
+        savedTitle.setTextSize(18);
+        savedTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
 
-        root.addView(savedTitle);
+        LinearLayout.LayoutParams stLp =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        savedHead.addView(savedTitle, stLp);
+
+        TextView savedBadge = new TextView(this);
+        savedBadge.setText("•");
+        savedBadge.setTextColor(dimText);
+        savedBadge.setTextSize(14);
+
+        savedHead.addView(savedBadge);
+
+        content.addView(savedHead);
 
         trustedCountText = new TextView(this);
-        trustedCountText.setTextColor(
-                Color.rgb(140, 160, 200)
-        );
-        trustedCountText.setTextSize(14);
-        trustedCountText.setPadding(5, 0, 5, 8);
+        trustedCountText.setTextColor(dimText);
+        trustedCountText.setTextSize(13);
+        trustedCountText.setPadding(dp(6), 0, dp(6), dp(8));
 
-        root.addView(trustedCountText);
+        content.addView(trustedCountText);
 
         trustedListContainer = new LinearLayout(this);
         trustedListContainer.setOrientation(
                 LinearLayout.VERTICAL
         );
 
-        root.addView(trustedListContainer);
+        content.addView(trustedListContainer);
 
         // =========================
         // FOOTER
         // =========================
 
         TextView footer = new TextView(this);
-
         footer.setText(
-                "\n🎙  AI Call Assistant\n" +
+                "\n🎙   AI Call Assistant\n" +
                 "বাংলায় স্মার্ট কল সহায়তা"
         );
-
-        footer.setTextColor(
-                Color.rgb(170, 180, 220)
-        );
-
-        footer.setTextSize(14);
+        footer.setTextColor(dimText);
+        footer.setTextSize(13);
         footer.setGravity(Gravity.CENTER);
-        footer.setPadding(0, 25, 0, 10);
+        footer.setPadding(0, dp(24), 0, dp(14));
 
-        root.addView(footer);
+        content.addView(footer);
 
-        addButton.setOnClickListener(
-                v -> addTrustedNumber()
-        );
+        // =========================
+        // BOTTOM NAV (fixed)
+        // =========================
 
-        setContentView(scrollView);
+        LinearLayout bottomNav = new LinearLayout(this);
+        bottomNav.setOrientation(LinearLayout.HORIZONTAL);
+        bottomNav.setGravity(Gravity.CENTER_VERTICAL);
+        bottomNav.setPadding(dp(10), dp(10), dp(10), dp(14));
+
+        GradientDrawable navBg = new GradientDrawable();
+        navBg.setColor(Color.rgb(8, 10, 30));
+        navBg.setStroke(dp(2), purple);
+        navBg.setCornerRadii(new float[]{
+                dp(30), dp(30),
+                dp(30), dp(30),
+                0, 0,
+                0, 0
+        });
+        bottomNav.setBackground(navBg);
+
+        // Home
+        LinearLayout homeWrap = new LinearLayout(this);
+        homeWrap.setOrientation(LinearLayout.VERTICAL);
+        homeWrap.setGravity(Gravity.CENTER);
+
+        TextView homeIcon = new TextView(this);
+        homeIcon.setText("🏠");
+        homeIcon.setTextSize(22);
+        homeIcon.setGravity(Gravity.CENTER);
+
+        TextView homeLbl = new TextView(this);
+        homeLbl.setText("Home");
+        homeLbl.setTextColor(purple);
+        homeLbl.setTextSize(12);
+        homeLbl.setGravity(Gravity.CENTER);
+        homeLbl.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+
+        homeWrap.addView(homeIcon);
+        homeWrap.addView(homeLbl);
+
+        LinearLayout.LayoutParams hwLp =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        bottomNav.addView(homeWrap, hwLp);
+
+        // Mic center
+        FrameLayout micWrap = new FrameLayout(this);
+        micWrap.setPadding(dp(6), 0, dp(6), 0);
+
+        View micGlow = new View(this);
+        micGlow.setBackground(makeGlowBg(
+                new int[]{
+                        Color.rgb(120, 60, 255),
+                        Color.rgb(200, 40, 200)
+                },
+                Color.rgb(180, 80, 255),
+                40
+        ));
+
+        FrameLayout.LayoutParams mgLp =
+                new FrameLayout.LayoutParams(dp(68), dp(68), Gravity.CENTER);
+        micWrap.addView(micGlow, mgLp);
+
+        TextView micIcon = new TextView(this);
+        micIcon.setText("🎤");
+        micIcon.setTextSize(26);
+        micIcon.setGravity(Gravity.CENTER);
+
+        FrameLayout.LayoutParams miLp =
+                new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER);
+        micWrap.addView(micIcon, miLp);
+
+        LinearLayout.LayoutParams mwLp =
+                new LinearLayout.LayoutParams(-2, -2);
+        bottomNav.addView(micWrap, mwLp);
+
+        // Handover
+        LinearLayout hWrap = new LinearLayout(this);
+        hWrap.setOrientation(LinearLayout.VERTICAL);
+        hWrap.setGravity(Gravity.CENTER);
+
+        TextView hIcon = new TextView(this);
+        hIcon.setText("⇄");
+        hIcon.setTextSize(24);
+        hIcon.setTextColor(white);
+        hIcon.setGravity(Gravity.CENTER);
+
+        TextView hLbl = new TextView(this);
+        hLbl.setText("Handover");
+        hLbl.setTextColor(dimText);
+        hLbl.setTextSize(12);
+        hLbl.setGravity(Gravity.CENTER);
+
+        hWrap.addView(hIcon);
+        hWrap.addView(hLbl);
+
+        LinearLayout.LayoutParams hwlLp =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        bottomNav.addView(hWrap, hwlLp);
+
+        LinearLayout.LayoutParams navLp =
+                new LinearLayout.LayoutParams(-1, -2);
+        navLp.setMargins(dp(10), 0, dp(10), dp(10));
+
+        root.addView(bottomNav, navLp);
+
+        setContentView(root);
     }
 
     // =========================
-    // GLOW BACKGROUND HELPER
+    // GLOW BACKGROUND
     // =========================
 
     private Drawable makeGlowBg(
@@ -379,17 +584,13 @@ public class MainActivity extends Activity {
             float radiusDp
     ) {
 
-        float density =
-                getResources().getDisplayMetrics().density;
-
-        float radius = radiusDp * density;
+        float radius = dp(radiusDp);
 
         int[] glowAlphas = { 25, 55, 100 };
 
         Drawable[] layers = new Drawable[4];
 
         for (int i = 0; i < 3; i++) {
-
             GradientDrawable g = new GradientDrawable();
             g.setShape(GradientDrawable.RECTANGLE);
             g.setCornerRadius(radius);
@@ -401,7 +602,6 @@ public class MainActivity extends Activity {
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 gradientColors
         );
-
         main.setShape(GradientDrawable.RECTANGLE);
         main.setCornerRadius(radius);
 
@@ -409,8 +609,7 @@ public class MainActivity extends Activity {
 
         LayerDrawable ld = new LayerDrawable(layers);
 
-        int step = dpToPx(2);
-
+        int step = dp(2);
         ld.setLayerInset(1, step, step, step, step);
         ld.setLayerInset(2, step * 2, step * 2, step * 2, step * 2);
         ld.setLayerInset(3, step * 3, step * 3, step * 3, step * 3);
@@ -422,9 +621,9 @@ public class MainActivity extends Activity {
         return (color & 0x00FFFFFF) | (alpha << 24);
     }
 
-    private int dpToPx(int dp) {
+    private int dp(int value) {
         return (int)(
-                dp *
+                value *
                 getResources().getDisplayMetrics().density
         );
     }
@@ -433,338 +632,4 @@ public class MainActivity extends Activity {
     // CARD
     // =========================
 
-    private LinearLayout createCard(
-            int background,
-            int stroke1,
-            int stroke2
-    ) {
-
-        LinearLayout card =
-                new LinearLayout(this);
-
-        card.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        card.setGravity(Gravity.CENTER);
-
-        card.setPadding(
-                18,
-                20,
-                18,
-                20
-        );
-
-        GradientDrawable bg =
-                new GradientDrawable();
-
-        bg.setColor(background);
-        bg.setCornerRadius(35);
-        bg.setStroke(3, stroke1);
-
-        card.setBackground(bg);
-
-        LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-
-        params.setMargins(0, 8, 0, 8);
-
-        card.setLayoutParams(params);
-
-        return card;
-    }
-
-    // =========================
-    // STAT CARD
-    // =========================
-
-    private TextView createStatCard(
-            String icon,
-            String label,
-            String value
-    ) {
-
-        TextView text = new TextView(this);
-
-        text.setText(
-                icon + "\n" +
-                label + "\n" +
-                value
-        );
-
-        text.setTextColor(white);
-        text.setTextSize(15);
-        text.setGravity(Gravity.CENTER);
-        text.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        GradientDrawable bg =
-                new GradientDrawable();
-
-        bg.setColor(Color.rgb(10, 18, 50));
-        bg.setCornerRadius(28);
-        bg.setStroke(2, blue);
-
-        text.setBackground(bg);
-
-        return text;
-    }
-
-    // =========================
-    // ADD NUMBER
-    // =========================
-
-    private void addTrustedNumber() {
-
-        String number =
-                trustedNumberInput
-                        .getText()
-                        .toString()
-                        .trim();
-
-        if (number.isEmpty()) {
-
-            Toast.makeText(
-                    this,
-                    "একটি ফোন নম্বর দিন",
-                    Toast.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        number = normalizeNumber(number);
-
-        Set<String> currentNumbers =
-                new HashSet<>(
-                        preferences.getStringSet(
-                                NUMBERS_KEY,
-                                new HashSet<>()
-                        )
-                );
-
-        if (currentNumbers.contains(number)) {
-
-            Toast.makeText(
-                    this,
-                    "এই নম্বরটি আগে থেকেই Trusted",
-                    Toast.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        currentNumbers.add(number);
-
-        preferences.edit()
-                .putStringSet(
-                        NUMBERS_KEY,
-                        currentNumbers
-                )
-                .apply();
-
-        trustedNumberInput.setText("");
-
-        refreshTrustedList();
-
-        Toast.makeText(
-                this,
-                "✓ Trusted number added",
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    // =========================
-    // REFRESH LIST
-    // =========================
-
-    private void refreshTrustedList() {
-
-        trustedListContainer.removeAllViews();
-
-        Set<String> saved =
-                preferences.getStringSet(
-                        NUMBERS_KEY,
-                        new HashSet<>()
-                );
-
-        ArrayList<String> numbers =
-                new ArrayList<>(saved);
-
-        Collections.sort(numbers);
-
-        trustedCountText.setText(
-                numbers.size() +
-                " Trusted number saved"
-        );
-
-        if (trustedStatCard != null) {
-            trustedStatCard.setText(
-                    "🛡\nTrusted\n" + numbers.size()
-            );
-        }
-
-        if (numbers.isEmpty()) {
-
-            TextView empty =
-                    new TextView(this);
-
-            empty.setText(
-                    "এখনও কোনো Trusted Number যোগ করা হয়নি।"
-            );
-
-            empty.setTextColor(
-                    Color.rgb(150, 160, 190)
-            );
-
-            empty.setTextSize(15);
-            empty.setPadding(8, 10, 8, 10);
-
-            trustedListContainer.addView(empty);
-
-            return;
-        }
-
-        for (String number : numbers) {
-
-            addNumberRow(number);
-        }
-    }
-
-    // =========================
-    // NUMBER ROW
-    // =========================
-
-    private void addNumberRow(
-            String number
-    ) {
-
-        LinearLayout row =
-                new LinearLayout(this);
-
-        row.setOrientation(
-                LinearLayout.HORIZONTAL
-        );
-
-        row.setGravity(
-                Gravity.CENTER_VERTICAL
-        );
-
-        row.setPadding(
-                15,
-                12,
-                10,
-                12
-        );
-
-        GradientDrawable rowBg =
-                new GradientDrawable();
-
-        rowBg.setColor(
-                Color.rgb(9, 15, 42)
-        );
-
-        rowBg.setCornerRadius(25);
-        rowBg.setStroke(2, purple);
-
-        row.setBackground(rowBg);
-
-        TextView numberText =
-                new TextView(this);
-
-        numberText.setText(
-                "🛡  " + number
-        );
-
-        numberText.setTextColor(white);
-        numberText.setTextSize(16);
-
-        LinearLayout.LayoutParams textParams =
-                new LinearLayout.LayoutParams(
-                        0,
-                        -2,
-                        1
-                );
-
-        row.addView(
-                numberText,
-                textParams
-        );
-
-        // ===== DELETE BUTTON (glow + text visible) =====
-
-        TextView deleteButton = new TextView(this);
-        deleteButton.setText("DELETE");
-        deleteButton.setTextSize(12);
-        deleteButton.setTextColor(white);
-        deleteButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        deleteButton.setGravity(Gravity.CENTER);
-        deleteButton.setClickable(true);
-        deleteButton.setFocusable(true);
-
-        Drawable delBg = makeGlowBg(
-                new int[]{
-                        Color.rgb(235, 45, 110),
-                        Color.rgb(160, 20, 90)
-                },
-                Color.rgb(255, 60, 120),
-                22
-        );
-
-        deleteButton.setBackground(delBg);
-
-        deleteButton.setOnClickListener(
-                v -> deleteTrustedNumber(number)
-        );
-
-        LinearLayout.LayoutParams delParams =
-                new LinearLayout.LayoutParams(
-                        dpToPx(95),
-                        dpToPx(60)
-                );
-
-        delParams.setMargins(dpToPx(6), 0, 0, 0);
-
-        row.addView(
-                deleteButton,
-                delParams
-        );
-
-        LinearLayout.LayoutParams rowParams =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        -2
-                );
-
-        rowParams.setMargins(
-                0,
-                6,
-                0,
-                6
-        );
-
-        trustedListContainer.addView(
-                row,
-                rowParams
-        );
-    }
-
-    // =========================
-    // DELETE
-    // =========================
-
-    private void deleteTrustedNumber(
-            String number
-    ) {
-
-        Set<String> currentNumbers =
-                new HashSet<>(
-                        preferences.getStringSet(
-                                NUMBERS_KEY,
-                                new HashSet<>()
-   
+    private Line
