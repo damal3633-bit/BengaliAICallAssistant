@@ -25,6 +25,7 @@ public class MainActivity extends Activity {
     private EditText trustedNumberInput;
     private LinearLayout trustedListContainer;
     private TextView trustedCountText;
+    private TextView trustedStatCard;
 
     private android.content.SharedPreferences preferences;
 
@@ -76,7 +77,7 @@ public class MainActivity extends Activity {
         root.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("আপনার কল • আপনার নিয়ন্ত্রণ • AI সহায়তা");
+        subtitle.setText("আপনার কল • আপনার নিয়ন্ত্রণ • AI সহায়তা");
         subtitle.setTextColor(Color.rgb(180, 190, 220));
         subtitle.setTextSize(14);
         subtitle.setGravity(Gravity.CENTER);
@@ -149,7 +150,7 @@ public class MainActivity extends Activity {
                 "0"
         );
 
-        TextView trustedCard = createStatCard(
+        trustedStatCard = createStatCard(
                 "🛡",
                 "Trusted",
                 "0"
@@ -165,7 +166,7 @@ public class MainActivity extends Activity {
         );
 
         stats.addView(
-                trustedCard,
+                trustedStatCard,
                 new LinearLayout.LayoutParams(
                         0,
                         130,
@@ -312,7 +313,7 @@ public class MainActivity extends Activity {
 
         footer.setText(
                 "\n🎙  AI Call Assistant\n" +
-                "বাংলায় স্মার্ট কল সহায়তা"
+                "বাংলায় স্মার্ট কল সহায়তা"
         );
 
         footer.setTextColor(
@@ -506,13 +507,19 @@ public class MainActivity extends Activity {
                 " Trusted number saved"
         );
 
+        if (trustedStatCard != null) {
+            trustedStatCard.setText(
+                    "🛡\nTrusted\n" + numbers.size()
+            );
+        }
+
         if (numbers.isEmpty()) {
 
             TextView empty =
                     new TextView(this);
 
             empty.setText(
-                    "এখনও কোনো Trusted Number যোগ করা হয়নি।"
+                    "এখনও কোনো Trusted Number যোগ করা হয়নি।"
             );
 
             empty.setTextColor(
