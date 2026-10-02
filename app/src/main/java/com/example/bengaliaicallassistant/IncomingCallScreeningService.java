@@ -11,6 +11,7 @@ public class IncomingCallScreeningService extends CallScreeningService {
 
     private static final String PREFS_NAME = "trusted_numbers";
     private static final String NUMBERS_KEY = "numbers";
+    private static final String TOTAL_CALLS_KEY = "total_calls";
 
     @Override
     public void onScreenCall(Call.Details callDetails) {
@@ -31,6 +32,26 @@ public class IncomingCallScreeningService extends CallScreeningService {
                         MODE_PRIVATE
                 );
 
+        // =========================
+        // TOTAL CALLS COUNTER
+        // =========================
+
+        int totalCalls = preferences.getInt(
+                TOTAL_CALLS_KEY,
+                0
+        );
+
+        preferences.edit()
+                .putInt(
+                        TOTAL_CALLS_KEY,
+                        totalCalls + 1
+                )
+                .apply();
+
+        // =========================
+        // TRUSTED CHECK
+        // =========================
+
         Set<String> trustedNumbers =
                 preferences.getStringSet(
                         NUMBERS_KEY,
@@ -39,15 +60,6 @@ public class IncomingCallScreeningService extends CallScreeningService {
 
         boolean isTrusted =
                 trustedNumbers.contains(phoneNumber);
-
-        /*
-         * Trusted number:
-         * সরাসরি normal incoming call হিসেবে যেতে দেওয়া হবে।
-         *
-         * Non-trusted number:
-         * আপাতত normal call হিসেবেই যেতে দেওয়া হচ্ছে।
-         * পরের ধাপে AI handling system যোগ করা হবে।
-         */
 
         CallResponse response =
                 new CallResponse.Builder()
