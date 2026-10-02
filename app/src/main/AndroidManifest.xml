@@ -22,6 +22,10 @@
             android:name=".CallHistoryActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".BlockedNumbersActivity"
+            android:exported="false" />
+
         <service
             android:name=".IncomingCallScreeningService"
             android:permission="android.permission.BIND_SCREENING_SERVICE"
