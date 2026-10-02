@@ -158,6 +158,196 @@ public class MainActivity extends Activity {
                         Gravity.CENTER
                 );
         robotWrap.addView(robotGlow, glowParams);
+package com.example.bengaliaicallassistant;
+
+import android.app.Activity;
+import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.os.Bundle;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Shader;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.text.InputType;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+public class MainActivity extends Activity {
+
+    private EditText trustedNumberInput;
+    private LinearLayout trustedListContainer;
+    private TextView trustedCountText;
+    private TextView trustedStatCard;
+    private TextView trustedPill;
+    private TextView totalCallsCard;
+
+    private SharedPreferences preferences;
+
+    private static final String PREFS_NAME = "trusted_numbers";
+    private static final String NUMBERS_KEY = "numbers";
+    private static final String TOTAL_CALLS_KEY = "total_calls";
+
+    private int white = Color.WHITE;
+    private int lightText = Color.rgb(200, 210, 235);
+    private int dimText = Color.rgb(140, 155, 195);
+    private int blue = Color.rgb(60, 170, 255);
+    private int purple = Color.rgb(180, 80, 255);
+    private int green = Color.rgb(40, 230, 150);
+    private int darkBg = Color.rgb(3, 5, 22);
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        preferences = getSharedPreferences(
+                PREFS_NAME,
+                MODE_PRIVATE
+        );
+
+        createUI();
+        refreshTrustedList();
+        refreshTotalCalls();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshTotalCalls();
+    }
+
+    private void refreshTotalCalls() {
+
+        if (totalCallsCard == null) {
+            return;
+        }
+
+        int total = preferences.getInt(
+                TOTAL_CALLS_KEY,
+                0
+        );
+
+        totalCallsCard.setText(
+                "📞\nTotal Calls\nScreened\n" + total
+        );
+    }
+
+    private void createUI() {
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(darkBg);
+
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setFillViewport(true);
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(20), dp(30), dp(20), dp(30));
+
+        scrollView.addView(content);
+
+        root.addView(
+                scrollView,
+                new LinearLayout.LayoutParams(-1, 0, 1)
+        );
+
+        // ===== HEADER =====
+
+        LinearLayout headerRow = new LinearLayout(this);
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(Gravity.CENTER_VERTICAL);
+        headerRow.setPadding(dp(4), 0, dp(4), 0);
+
+        TextView headerIcon = new TextView(this);
+        headerIcon.setText("🤖");
+        headerIcon.setTextSize(30);
+
+        LinearLayout.LayoutParams hiParams =
+                new LinearLayout.LayoutParams(-2, -2);
+        hiParams.setMargins(0, 0, dp(12), 0);
+        headerRow.addView(headerIcon, hiParams);
+
+        TextView title = new TextView(this);
+        title.setText("Bengali AI Call Assistant");
+        title.setTextColor(white);
+        title.setTextSize(20);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+
+        LinearLayout.LayoutParams titleParams =
+                new LinearLayout.LayoutParams(0, -2, 1);
+        headerRow.addView(title, titleParams);
+
+        TextView gear = new TextView(this);
+        gear.setText("⚙");
+        gear.setTextSize(24);
+        gear.setTextColor(Color.rgb(120, 150, 220));
+
+        headerRow.addView(gear);
+
+        content.addView(headerRow);
+
+        title.post(() -> {
+            Shader shader = new LinearGradient(
+                    0, 0, title.getWidth(), 0,
+                    new int[]{
+                            Color.rgb(80, 180, 255),
+                            Color.rgb(180, 100, 255),
+                            Color.rgb(255, 120, 200)
+                    },
+                    null,
+                    Shader.TileMode.CLAMP
+            );
+            title.getPaint().setShader(shader);
+            title.invalidate();
+        });
+
+        TextView subtitle = new TextView(this);
+        subtitle.setText("অজানা কল, এখন আর চিন্তার কারণ নয়!");
+        subtitle.setTextColor(dimText);
+        subtitle.setTextSize(13);
+        subtitle.setGravity(Gravity.CENTER);
+        subtitle.setPadding(0, dp(6), 0, dp(22));
+
+        content.addView(subtitle);
+
+        // ===== HERO CARD =====
+
+        LinearLayout heroCard = createCard(
+                Color.rgb(15, 22, 70),
+                purple
+        );
+
+        FrameLayout robotWrap = new FrameLayout(this);
+
+        View robotGlow = new View(this);
+        robotGlow.setBackground(makeGlowBg(
+                new int[]{
+                        Color.rgb(70, 130, 255),
+                        Color.rgb(180, 80, 255)
+                },
+                Color.rgb(140, 100, 255),
+                60
+        ));
+
+        FrameLayout.LayoutParams glowParams =
+                new FrameLayout.LayoutParams(
+                        dp(120), dp(120),
+                        Gravity.CENTER
+                );
+        robotWrap.addView(robotGlow, glowParams);
 
         TextView robotEmoji = new TextView(this);
         robotEmoji.setText("🤖");
@@ -223,12 +413,15 @@ public class MainActivity extends Activity {
         heroInfo.setPadding(0, dp(4), 0, dp(4));
 
         heroCard.addView(heroInfo);
+
+        // ===== STATS ROW =====
+
         LinearLayout stats = new LinearLayout(this);
         stats.setOrientation(LinearLayout.HORIZONTAL);
         stats.setGravity(Gravity.CENTER);
         stats.setPadding(0, dp(18), 0, dp(18));
 
-        TextView totalCard = createStatCard(
+        totalCallsCard = createStatCard(
                 "📞",
                 "Total Calls\nScreened",
                 "0",
@@ -261,11 +454,13 @@ public class MainActivity extends Activity {
                 new LinearLayout.LayoutParams(0, -2, 1);
         statLp3.setMargins(dp(6), 0, 0, 0);
 
-        stats.addView(totalCard, statLp1);
+        stats.addView(totalCallsCard, statLp1);
         stats.addView(trustedStatCard, statLp2);
         stats.addView(blockedCard, statLp3);
 
         content.addView(stats);
+
+        // ===== TRUSTED NUMBERS CARD =====
 
         LinearLayout trustedBox = createCard(
                 Color.rgb(12, 20, 60),
@@ -364,6 +559,8 @@ public class MainActivity extends Activity {
 
         content.addView(trustedBox);
 
+        // ===== SAVED NUMBERS HEADER =====
+
         LinearLayout savedHead = new LinearLayout(this);
         savedHead.setOrientation(LinearLayout.HORIZONTAL);
         savedHead.setGravity(Gravity.CENTER_VERTICAL);
@@ -404,6 +601,8 @@ public class MainActivity extends Activity {
         footer.setPadding(0, dp(24), 0, dp(14));
 
         content.addView(footer);
+
+        // ===== BOTTOM NAV =====
 
         LinearLayout bottomNav = new LinearLayout(this);
         bottomNav.setOrientation(LinearLayout.HORIZONTAL);
@@ -510,14 +709,17 @@ public class MainActivity extends Activity {
         root.addView(bottomNav, navLp);
 
         setContentView(root);
-            }
+    }
+
     private Drawable makeGlowBg(
             int[] gradientColors,
             int glowColor,
             float radiusDp
     ) {
 
-        float radius = dp(radiusDp);
+        float radius =
+                radiusDp *
+                getResources().getDisplayMetrics().density;
         int[] glowAlphas = { 25, 55, 100 };
         Drawable[] layers = new Drawable[4];
 
@@ -583,232 +785,4 @@ public class MainActivity extends Activity {
                 new LinearLayout.LayoutParams(
                         -1,
                         LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-        params.setMargins(0, dp(8), 0, dp(8));
-        card.setLayoutParams(params);
-
-        return card;
-    }
-
-    private TextView createStatCard(
-            String icon,
-            String label,
-            String value,
-            int accentColor
-    ) {
-
-        TextView text = new TextView(this);
-        text.setText(icon + "\n" + label + "\n" + value);
-        text.setTextColor(white);
-        text.setTextSize(13);
-        text.setGravity(Gravity.CENTER);
-        text.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        text.setPadding(
-                dp(6), dp(14),
-                dp(6), dp(14)
-        );
-        text.setLineSpacing(dp(2), 1f);
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.rgb(10, 16, 48));
-        bg.setCornerRadius(dp(22));
-        bg.setStroke(dp(2), accentColor);
-
-        text.setBackground(bg);
-
-        return text;
-    }
-
-    private void addTrustedNumber() {
-
-        String number =
-                trustedNumberInput.getText().toString().trim();
-
-        if (number.isEmpty()) {
-            Toast.makeText(
-                    this,
-                    "একটি ফোন নম্বর দিন",
-                    Toast.LENGTH_SHORT
-            ).show();
-            return;
-        }
-
-        number = normalizeNumber(number);
-
-        Set<String> currentNumbers =
-                new HashSet<>(
-                        preferences.getStringSet(
-                                NUMBERS_KEY,
-                                new HashSet<>()
-                        )
-                );
-
-        if (currentNumbers.contains(number)) {
-            Toast.makeText(
-                    this,
-                    "এই নম্বরটি আগে থেকেই Trusted",
-                    Toast.LENGTH_SHORT
-            ).show();
-            return;
-        }
-
-        currentNumbers.add(number);
-
-        preferences.edit()
-                .putStringSet(
-                        NUMBERS_KEY,
-                        currentNumbers
                 )
-                .apply();
-
-        trustedNumberInput.setText("");
-        refreshTrustedList();
-
-        Toast.makeText(
-                this,
-                "✓ Trusted number added",
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    private void refreshTrustedList() {
-
-        trustedListContainer.removeAllViews();
-
-        Set<String> saved =
-                preferences.getStringSet(
-                        NUMBERS_KEY,
-                        new HashSet<>()
-                );
-
-        ArrayList<String> numbers = new ArrayList<>(saved);
-        Collections.sort(numbers);
-
-        trustedCountText.setText(
-                numbers.size() + " Trusted number saved"
-        );
-
-        if (trustedStatCard != null) {
-            trustedStatCard.setText(
-                    "🛡\nTrusted\nNumbers\n" + numbers.size()
-            );
-        }
-
-        if (trustedPill != null) {
-            trustedPill.setText(
-                    numbers.size() + " Trusted"
-            );
-        }
-
-        if (numbers.isEmpty()) {
-
-            TextView empty = new TextView(this);
-            empty.setText(
-                    "এখনও কোনো Trusted Number যোগ করা হয়নি।"
-            );
-            empty.setTextColor(dimText);
-            empty.setTextSize(14);
-            empty.setPadding(dp(8), dp(10), dp(8), dp(10));
-
-            trustedListContainer.addView(empty);
-            return;
-        }
-
-        for (String number : numbers) {
-            addNumberRow(number);
-        }
-    }
-
-    private void addNumberRow(String number) {
-
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(
-                dp(14), dp(10),
-                dp(10), dp(10)
-        );
-
-        GradientDrawable rowBg = new GradientDrawable();
-        rowBg.setColor(Color.rgb(10, 16, 48));
-        rowBg.setCornerRadius(dp(22));
-        rowBg.setStroke(dp(2), purple);
-        row.setBackground(rowBg);
-
-        TextView numText = new TextView(this);
-        numText.setText("👤  " + number);
-        numText.setTextColor(white);
-        numText.setTextSize(15);
-
-        LinearLayout.LayoutParams tLp =
-                new LinearLayout.LayoutParams(0, -2, 1);
-        row.addView(numText, tLp);
-
-        TextView delBtn = new TextView(this);
-        delBtn.setText("🗑");
-        delBtn.setTextSize(18);
-        delBtn.setTextColor(white);
-        delBtn.setGravity(Gravity.CENTER);
-        delBtn.setClickable(true);
-        delBtn.setFocusable(true);
-        delBtn.setBackground(makeGlowBg(
-                new int[]{
-                        Color.rgb(235, 45, 110),
-                        Color.rgb(160, 20, 90)
-                },
-                Color.rgb(255, 60, 120),
-                18
-        ));
-
-        delBtn.setOnClickListener(
-                v -> deleteTrustedNumber(number)
-        );
-
-        LinearLayout.LayoutParams dLp =
-                new LinearLayout.LayoutParams(dp(52), dp(52));
-        dLp.setMargins(dp(6), 0, 0, 0);
-        row.addView(delBtn, dLp);
-
-        LinearLayout.LayoutParams rLp =
-                new LinearLayout.LayoutParams(-1, -2);
-        rLp.setMargins(0, dp(6), 0, dp(6));
-
-        trustedListContainer.addView(row, rLp);
-    }
-
-    private void deleteTrustedNumber(String number) {
-
-        Set<String> currentNumbers =
-                new HashSet<>(
-                        preferences.getStringSet(
-                                NUMBERS_KEY,
-                                new HashSet<>()
-                        )
-                );
-
-        currentNumbers.remove(number);
-
-        preferences.edit()
-                .putStringSet(
-                        NUMBERS_KEY,
-                        currentNumbers
-                )
-                .apply();
-
-        refreshTrustedList();
-
-        Toast.makeText(
-                this,
-                "Trusted number deleted",
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    private String normalizeNumber(String number) {
-        return number
-                .replace(" ", "")
-                .replace("-", "")
-                .replace("(", "")
-                .replace(")", "");
-    }
-            }
